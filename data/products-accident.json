@@ -1,0 +1,5 @@
+[
+  {"id":"aia-acc","companyId":"aia","category":"accident","nameZh":"友邦意外保障","nameEn":"AIA Accident","status":"seed","officialUrl":"https://www.aia.com.hk/","fields":{"adScale":"保額倍數","disable":"按傷殘表","hospitalCash":"視附加保障","area":"通常全球","highlight":"待核對現售獨立定附加"}},
+  {"id":"fwd-acc","companyId":"fwd","category":"accident","nameZh":"富衛意外保障","nameEn":"FWD Accident","status":"seed","officialUrl":"https://www.fwd.com.hk/","fields":{"adScale":"保額倍數","disable":"按傷殘表","hospitalCash":"視計劃","area":"通常全球","highlight":"待核對現售計劃名"}},
+  {"id":"bc-acc","companyId":"bluecross","category":"accident","nameZh":"藍十字意外保障","nameEn":"Blue Cross Accident","status":"seed","officialUrl":"https://www.bluecross.com.hk/","fields":{"adScale":"保額倍數","disable":"按傷殘表","hospitalCash":"視計劃","area":"視計劃","highlight":"意外產品線相對齊"}}
+]

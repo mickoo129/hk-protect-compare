@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "保障羅盤",
+    "updatedAt": "2026-09-25",
+    "disclaimer": "本站只整理公開產品資料，方便對比保障結構，並非保險意見、要約或招攬。實際條款、保費及核保結果以保險公司正式計劃書及保單為準。第一版產品資料標示「待核對」者尚未逐份 brochure 核對。本站不比較儲蓄／分紅產品，亦暫不包括銀行專屬系列（滙豐人壽、恒生保險、中銀人壽）。",
+    "scope": { "categories": ["medical", "ci", "life", "accident"], "excluded": ["savings", "bank-captive"] }
+  },
+  "categories": [
+    { "id": "medical", "zh": "醫療／自願醫保", "en": "Medical / VHIS" },
+    { "id": "ci", "zh": "危疾", "en": "Critical Illness" },
+    { "id": "life", "zh": "人壽", "en": "Life" },
+    { "id": "accident", "zh": "意外", "en": "Accident" }
+  ],
+  "companies": [
+    { "id": "aia", "zh": "友邦", "en": "AIA", "site": "https://www.aia.com.hk/", "group": "core", "note": "代理行為主" },
+    { "id": "pru", "zh": "保誠", "en": "Prudential", "site": "https://www.prudential.com.hk/", "group": "core", "note": "代理行為主" },
+    { "id": "manu", "zh": "宏利", "en": "Manulife", "site": "https://www.manulife.com.hk/", "group": "core", "note": "代理行為主" },
+    { "id": "fwd", "zh": "富衛", "en": "FWD", "site": "https://www.fwd.com.hk/", "group": "core", "note": "代理行＋網銷" },
+    { "id": "axa", "zh": "安盛", "en": "AXA", "site": "https://www.axa.com.hk/", "group": "core", "note": "代理行為主" },
+    { "id": "sunlife", "zh": "永明", "en": "Sun Life", "site": "https://www.sunlife.com.hk/", "group": "core", "note": "代理行為主" },
+    { "id": "clife", "zh": "中國人壽（海外）", "en": "China Life Overseas", "site": "https://www.chinalife.com.hk/", "group": "core", "note": "中資代理行" },
+    { "id": "ctf", "zh": "周大福人壽", "en": "CTF Life", "site": "https://www.ctflife.com.hk/", "group": "core", "note": "前富通" },
+    { "id": "taiping", "zh": "中國太平人壽（香港）", "en": "China Taiping Life HK", "site": "https://tplhk.cntaiping.com/", "group": "core", "note": "中資代理行" },
+    { "id": "chubb", "zh": "安達人壽", "en": "Chubb Life", "site": "https://www.chubb.com/hk-en/", "group": "add", "note": "危疾較多人問" },
+    { "id": "yf", "zh": "萬通", "en": "YF Life", "site": "https://www.yflife.com/", "group": "add", "note": "危疾較多人問" },
+    { "id": "bupa", "zh": "保柏", "en": "Bupa", "site": "https://www.bupa.com.hk/", "group": "add", "note": "醫療主力" },
+    { "id": "bowtie", "zh": "保泰", "en": "Bowtie", "site": "https://www.bowtie.com.hk/", "group": "narrow", "note": "虛擬保司" },
+    { "id": "bluecross", "zh": "藍十字", "en": "Blue Cross", "site": "https://www.bluecross.com.hk/", "group": "narrow", "note": "醫療／意外" }
+  ],
+  "compareFields": {
+    "medical": ["vhis", "ward", "area", "annualLimit", "deductible", "highlight"],
+    "ci": ["illnessCount", "earlyStage", "multiClaim", "cancerStyle", "payTerm", "highlight"],
+    "life": ["planType", "benefitTerm", "convertible", "currency", "highlight"],
+    "accident": ["adScale", "disable", "hospitalCash", "area", "highlight"]
+  },
+  "fieldLabels": {
+    "vhis": "自願醫保", "ward": "病房級", "area": "地區", "annualLimit": "年度限額", "deductible": "自付費", "highlight": "重點",
+    "illnessCount": "病種（約）", "earlyStage": "早期危疾", "multiClaim": "多重賠償", "cancerStyle": "癌症保障", "payTerm": "供款期",
+    "planType": "類型", "benefitTerm": "保障期", "convertible": "可轉換", "currency": "貨幣",
+    "adScale": "意外身故", "disable": "傷殘", "hospitalCash": "住院津貼"
+  }
+}
