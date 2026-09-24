@@ -3,7 +3,8 @@ const state = {
   category: "medical",
   q: "",
   company: "all",
-  selected: []
+  selected: [],
+  verifiedOnly: false
 };
 
 const $ = (id) => document.getElementById(id);
@@ -18,11 +19,10 @@ function filteredProducts() {
   return db.products.filter((p) => {
     if (p.category !== category) return false;
     if (company !== "all" && p.companyId !== company) return false;
+    if (state.verifiedOnly && p.status !== "verified") return false;
     if (!needle) return true;
     const co = companyById(p.companyId);
-    const blob = [p.nameZh, p.nameEn, p.fields?.highlight, co?.zh, co?.en]
-      .join(" ")
-      .toLowerCase();
+    const blob = [p.nameZh, p.nameEn, p.fields?.highlight, co?.zh, co?.en].join(" ").toLowerCase();
     return blob.includes(needle);
   });
 }
@@ -44,7 +44,6 @@ function renderFilters() {
     };
     cats.appendChild(b);
   });
-
   const sel = $("company");
   const keep = state.company;
   sel.innerHTML = `<option value="all">全部公司</option>`;
@@ -65,33 +64,25 @@ function renderCards() {
     grid.innerHTML = `<div class="empty">呢個篩選暫時冇產品。可以轉類型或公司。</div>`;
     return;
   }
-  grid.innerHTML = list
-    .map((p) => {
-      const co = companyById(p.companyId);
-      const on = state.selected.includes(p.id);
-      const fields = state.db.compareFields[p.category] || [];
-      const preview = fields
-        .slice(0, 3)
-        .map((k) => {
-          const label = state.db.fieldLabels[k] || k;
-          return `<div class="kv">${label}：<b>${p.fields?.[k] || "—"}</b></div>`;
-        })
-        .join("");
-      return `<article class="card">
-        <div class="co">${co.zh} <span style="color:#8a93a0;font-weight:500">${co.en}</span></div>
-        <h3>${p.nameZh}</h3>
-        <div>
-          <span class="badge ${p.status}">${p.status === "verified" ? "已核對" : "待核對"}</span>
-        </div>
-        ${preview}
-        <div class="actions">
-          <button data-id="${p.id}" class="${on ? "on" : ""}">${on ? "已選比較" : "加入比較"}</button>
-          <a href="${p.officialUrl}" target="_blank" rel="noopener">官方</a>
-        </div>
-      </article>`;
-    })
-    .join("");
-
+  grid.innerHTML = list.map((p) => {
+    const co = companyById(p.companyId);
+    const on = state.selected.includes(p.id);
+    const fields = state.db.compareFields[p.category] || [];
+    const preview = fields.slice(0, 3).map((k) => {
+      const label = state.db.fieldLabels[k] || k;
+      return `<div class="kv">${label}：<b>${p.fields?.[k] || "—"}</b></div>`;
+    }).join("");
+    return `<article class="card">
+      <div class="co">${co.zh} <span style="color:#8a93a0;font-weight:500">${co.en}</span></div>
+      <h3>${p.nameZh}</h3>
+      <div><span class="badge ${p.status}">${p.status === "verified" ? "已核對" : "待核對"}</span></div>
+      ${preview}
+      <div class="actions">
+        <button data-id="${p.id}" class="${on ? "on" : ""}">${on ? "已選比較" : "加入比較"}</button>
+        <a href="${p.officialUrl}" target="_blank" rel="noopener">官方</a>
+      </div>
+    </article>`;
+  }).join("");
   grid.querySelectorAll("button[data-id]").forEach((btn) => {
     btn.onclick = () => toggle(btn.dataset.id);
   });
@@ -106,6 +97,22 @@ function toggle(id) {
   }
   renderCompare();
   renderCards();
+  renderDock();
+}
+
+function renderDock() {
+  const box = $("dock");
+  if (!box) return;
+  const n = state.selected.length;
+  box.innerHTML = `<div><b>${n} / 3 已選比較</b><br><span>${n ? "向下拉可以睇並排表" : "揁同一類型產品加入比較"}</span></div>
+    <button type="button" class="ghost" id="clearSel" ${n ? "" : "disabled"}>清空</button>`;
+  const btn = $("clearSel");
+  if (btn) btn.onclick = () => {
+    state.selected = [];
+    renderCards();
+    renderCompare();
+    renderDock();
+  };
 }
 
 function renderCompare() {
@@ -130,7 +137,8 @@ function renderCompare() {
     }).map((v) => `<td>${v}</td>`).join("");
     return `<tr><th>${label}</th>${cells}</tr>`;
   }).join("");
-  box.innerHTML = `<div class="compare"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div><p class="hint" style="margin-top:10px">比較只反映本站已入庫欄位，唔等於保單全文。</p>`;
+  box.innerHTML = `<div class="compare"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="hint" style="margin-top:10px">比較只反映本站已入庫欄位，唔等於保單全文。</p>`;
 }
 
 function renderStats() {
@@ -147,6 +155,7 @@ function render() {
   renderFilters();
   renderCards();
   renderCompare();
+  renderDock();
 }
 
 async function boot() {
@@ -161,14 +170,16 @@ async function boot() {
   state.db = { ...meta, products: [...medical, ...ci, ...life, ...accident] };
   $("disclaimer").textContent = state.db.meta.disclaimer;
   renderStats();
-  $("q").oninput = (e) => {
-    state.q = e.target.value;
-    renderCards();
-  };
-  $("company").onchange = (e) => {
-    state.company = e.target.value;
-    renderCards();
-  };
+  $("q").oninput = (e) => { state.q = e.target.value; renderCards(); };
+  $("company").onchange = (e) => { state.company = e.target.value; renderCards(); };
+  const vo = $("verifiedOnly");
+  if (vo) {
+    vo.onclick = () => {
+      state.verifiedOnly = !state.verifiedOnly;
+      vo.classList.toggle("on", state.verifiedOnly);
+      renderCards();
+    };
+  }
   render();
 }
 
