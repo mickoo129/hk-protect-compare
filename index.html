@@ -13,9 +13,15 @@
 <body>
   <header>
     <div class="wrap">
-      <h1>保障羅盤</h1>
-      <p>醫療／自願醫保、危疾、定期人壽、意外 — 結構比較，唔賣保險。</p>
+      <div class="brand">
+        <div class="mark" aria-hidden="true">保</div>
+        <div>
+          <h1>保障羅盤</h1>
+          <p>醫療／自願醫保、危疾、定期人壽、意外 — 結構比較，唔賣保險。</p>
+        </div>
+      </div>
       <div class="meta-row" id="stats"></div>
+      <div class="draft">而家係骨架版：產品多數仍標「待核對」，未對過正式計劃書。比較結構用得，唔好當報價或投保依據。</div>
     </div>
   </header>
   <div class="wrap">
@@ -29,9 +35,13 @@
           <label for="company">保險公司</label>
           <select id="company"></select>
         </div>
-        <div style="grid-column: 1 / -1">
+        <div>
           <label for="q">搜產品或公司</label>
           <input id="q" type="search" placeholder="例如：緻尚保、VHIS、保柏" />
+        </div>
+        <div>
+          <label>資料狀態</label>
+          <button type="button" class="toggle" id="verifiedOnly">只睇已核對</button>
         </div>
       </div>
     </section>
@@ -40,13 +50,14 @@
         <h2 style="margin:0;font-size:1.05rem">產品</h2>
         <div class="hint" id="count"></div>
       </div>
-      <p class="hint">標示「待核對」= 已入庫但未逐份計劃書核對。最多 3 隻加入下面比較表。</p>
+      <p class="hint">最多選 3 隻同一類型，下面同底部都可以睇比較。</p>
       <div class="grid" id="grid"></div>
     </section>
     <section class="panel">
       <h2 style="margin:0 0 8px;font-size:1.05rem">並排比較</h2>
       <div id="compare"></div>
     </section>
+    <div class="dock" id="dock"></div>
     <p class="disclaimer" id="disclaimer"></p>
   </div>
   <script src="./js/app.js"></script>
