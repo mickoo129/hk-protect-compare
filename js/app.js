@@ -115,35 +115,22 @@ function renderCompare() {
     box.innerHTML = `<p class="hint">最多選 3 隻同一類型產品並排。而家未選。</p>`;
     return;
   }
-  const products = ids
-    .map((id) => state.db.products.find((p) => p.id === id))
-    .filter(Boolean);
+  const products = ids.map((id) => state.db.products.find((p) => p.id === id)).filter(Boolean);
   const fields = ["name", ...(state.db.compareFields[state.category] || []), "status"];
-  const head = ["項目"]
-    .concat(
-      products.map((p) => {
-        const co = companyById(p.companyId);
-        return `${co.zh}<br><span style="font-weight:500">${p.nameZh}</span>`;
-      })
-    )
-    .map((h) => `<th>${h}</th>`)
-    .join("");
-  const rows = fields
-    .map((k) => {
-      const label = k === "name" ? "產品" : k === "status" ? "資料狀態" : state.db.fieldLabels[k] || k;
-      const cells = products
-        .map((p) => {
-          if (k === "name") return p.nameEn || p.nameZh;
-          if (k === "status") return p.status === "verified" ? "已核對" : "待核對種子";
-          return p.fields?.[k] || "—";
-        })
-        .map((v) => `<td>${v}</td>`)
-        .join("");
-      return `<tr><th>${label}</th>${cells}</tr>`;
-    })
-    .join("");
-  box.innerHTML = `<div class="compare"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="hint" style="margin-top:10px">比較只反映本站已入庫欄位，唔等於保單全文。</p>`;
+  const head = ["項目"].concat(products.map((p) => {
+    const co = companyById(p.companyId);
+    return `${co.zh}<br><span style="font-weight:500">${p.nameZh}</span>`;
+  })).map((h) => `<th>${h}</th>`).join("");
+  const rows = fields.map((k) => {
+    const label = k === "name" ? "產品" : k === "status" ? "資料狀態" : state.db.fieldLabels[k] || k;
+    const cells = products.map((p) => {
+      if (k === "name") return p.nameEn || p.nameZh;
+      if (k === "status") return p.status === "verified" ? "已核對" : "待核對種子";
+      return p.fields?.[k] || "—";
+    }).map((v) => `<td>${v}</td>`).join("");
+    return `<tr><th>${label}</th>${cells}</tr>`;
+  }).join("");
+  box.innerHTML = `<div class="compare"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div><p class="hint" style="margin-top:10px">比較只反映本站已入庫欄位，唔等於保單全文。</p>`;
 }
 
 function renderStats() {
@@ -163,8 +150,15 @@ function render() {
 }
 
 async function boot() {
-  const res = await fetch("./data/db.json");
-  state.db = await res.json();
+  const [meta, medical, ci, life, accident] = await Promise.all(
+    ["meta", "products-medical", "products-ci", "products-life", "products-accident"].map((name) =>
+      fetch(`./data/${name}.json`).then((r) => {
+        if (!r.ok) throw new Error(`${name} ${r.status}`);
+        return r.json();
+      })
+    )
+  );
+  state.db = { ...meta, products: [...medical, ...ci, ...life, ...accident] };
   $("disclaimer").textContent = state.db.meta.disclaimer;
   renderStats();
   $("q").oninput = (e) => {
