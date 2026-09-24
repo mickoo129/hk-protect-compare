@@ -22,7 +22,9 @@ function filteredProducts() {
     if (state.verifiedOnly && p.status !== "verified") return false;
     if (!needle) return true;
     const co = companyById(p.companyId);
-    const blob = [p.nameZh, p.nameEn, p.fields?.highlight, co?.zh, co?.en].join(" ").toLowerCase();
+    const blob = [p.nameZh, p.nameEn, p.fields?.highlight, p.fields?.fitFor, co?.zh, co?.en]
+      .join(" ")
+      .toLowerCase();
     return blob.includes(needle);
   });
 }
@@ -44,6 +46,7 @@ function renderFilters() {
     };
     cats.appendChild(b);
   });
+
   const sel = $("company");
   const keep = state.company;
   sel.innerHTML = `<option value="all">全部公司</option>`;
@@ -64,25 +67,34 @@ function renderCards() {
     grid.innerHTML = `<div class="empty">呢個篩選暫時冇產品。可以轉類型或公司。</div>`;
     return;
   }
-  grid.innerHTML = list.map((p) => {
-    const co = companyById(p.companyId);
-    const on = state.selected.includes(p.id);
-    const fields = state.db.compareFields[p.category] || [];
-    const preview = fields.slice(0, 3).map((k) => {
-      const label = state.db.fieldLabels[k] || k;
-      return `<div class="kv">${label}：<b>${p.fields?.[k] || "—"}</b></div>`;
-    }).join("");
-    return `<article class="card">
-      <div class="co">${co.zh} <span style="color:#8a93a0;font-weight:500">${co.en}</span></div>
-      <h3>${p.nameZh}</h3>
-      <div><span class="badge ${p.status}">${p.status === "verified" ? "已核對" : "待核對"}</span></div>
-      ${preview}
-      <div class="actions">
-        <button data-id="${p.id}" class="${on ? "on" : ""}">${on ? "已選比較" : "加入比較"}</button>
-        <a href="${p.officialUrl}" target="_blank" rel="noopener">官方</a>
-      </div>
-    </article>`;
-  }).join("");
+  grid.innerHTML = list
+    .map((p) => {
+      const co = companyById(p.companyId);
+      const on = state.selected.includes(p.id);
+      const previewKeys = ["fitFor", "annualLimit", "ward", "multiClaim", "illnessCount", "benefitTerm", "watchOut"]
+        .filter((k) => p.fields?.[k]);
+      const preview = previewKeys
+        .slice(0, 5)
+        .map((k) => {
+          const label = state.db.fieldLabels[k] || k;
+          return `<div class="kv">${label}：<b>${p.fields[k]}</b></div>`;
+        })
+        .join("");
+      return `<article class="card">
+        <div class="co">${co.zh} <span style="color:#8a93a0;font-weight:500">${co.en}</span></div>
+        <h3>${p.nameZh}</h3>
+        <div>
+          <span class="badge ${p.status}">${p.status === "verified" ? "已核對" : "待核對"}</span>
+        </div>
+        ${preview}
+        <div class="actions">
+          <button data-id="${p.id}" class="${on ? "on" : ""}">${on ? "已選比較" : "加入比較"}</button>
+          <a href="${p.officialUrl}" target="_blank" rel="noopener">官方</a>
+        </div>
+      </article>`;
+    })
+    .join("");
+
   grid.querySelectorAll("button[data-id]").forEach((btn) => {
     btn.onclick = () => toggle(btn.dataset.id);
   });
@@ -104,7 +116,7 @@ function renderDock() {
   const box = $("dock");
   if (!box) return;
   const n = state.selected.length;
-  box.innerHTML = `<div><b>${n} / 3 已選比較</b><br><span>${n ? "向下拉可以睇並排表" : "揁同一類型產品加入比較"}</span></div>
+  box.innerHTML = `<div><b>${n} / 3 已選比較</b><br><span>${n ? "向下拉可以睇並排表" : "揀同一類型產品加入比較"}</span></div>
     <button type="button" class="ghost" id="clearSel" ${n ? "" : "disabled"}>清空</button>`;
   const btn = $("clearSel");
   if (btn) btn.onclick = () => {
@@ -115,6 +127,21 @@ function renderDock() {
   };
 }
 
+function winnersFor(products, fieldKey) {
+  const map = state.db.rankMap || {};
+  const spec = map[fieldKey];
+  if (!spec) return products.map(() => false);
+  const nums = products.map((p) => {
+    const v = p.rank?.[spec.key];
+    return typeof v === "number" ? v : null;
+  });
+  const usable = nums.filter((v) => v !== null);
+  if (usable.length < 2) return products.map(() => false);
+  if (new Set(usable).size < 2) return products.map(() => false);
+  const best = spec.better === "low" ? Math.min(...usable) : Math.max(...usable);
+  return nums.map((v) => v === best);
+}
+
 function renderCompare() {
   const box = $("compare");
   const ids = state.selected;
@@ -123,21 +150,53 @@ function renderCompare() {
     return;
   }
   const products = ids.map((id) => state.db.products.find((p) => p.id === id)).filter(Boolean);
-  const fields = ["name", ...(state.db.compareFields[state.category] || []), "status"];
-  const head = ["項目"].concat(products.map((p) => {
-    const co = companyById(p.companyId);
-    return `${co.zh}<br><span style="font-weight:500">${p.nameZh}</span>`;
-  })).map((h) => `<th>${h}</th>`).join("");
-  const rows = fields.map((k) => {
-    const label = k === "name" ? "產品" : k === "status" ? "資料狀態" : state.db.fieldLabels[k] || k;
-    const cells = products.map((p) => {
-      if (k === "name") return p.nameEn || p.nameZh;
-      if (k === "status") return p.status === "verified" ? "已核對" : "待核對種子";
-      return p.fields?.[k] || "—";
-    }).map((v) => `<td>${v}</td>`).join("");
-    return `<tr><th>${label}</th>${cells}</tr>`;
-  }).join("");
-  box.innerHTML = `<div class="compare"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
+  const fields = [...(state.db.compareFields[state.category] || []), "status"];
+  const head = ["項目"]
+    .concat(
+      products.map((p) => {
+        const co = companyById(p.companyId);
+        return `${co.zh}<br><span style="font-weight:500">${p.nameZh}</span>`;
+      })
+    )
+    .map((h) => `<th>${h}</th>`)
+    .join("");
+
+  const winCounts = products.map(() => 0);
+  const rows = fields
+    .map((k) => {
+      const label = k === "status" ? "資料狀態" : state.db.fieldLabels[k] || k;
+      const wins = k === "status" ? products.map(() => false) : winnersFor(products, k);
+      wins.forEach((w, i) => {
+        if (w) winCounts[i] += 1;
+      });
+      const cells = products
+        .map((p, i) => {
+          const text =
+            k === "status"
+              ? p.status === "verified"
+                ? "已核對"
+                : "待核對種子"
+              : p.fields?.[k] || "—";
+          if (wins[i]) return `<td class="win"><span class="tick">✓</span> ${text}</td>`;
+          return `<td>${text}</td>`;
+        })
+        .join("");
+      return `<tr><th>${label}</th>${cells}</tr>`;
+    })
+    .join("");
+
+  const maxWin = Math.max(0, ...winCounts);
+  const summary = products
+    .map((p, i) => {
+      const co = companyById(p.companyId);
+      const mark = maxWin > 0 && winCounts[i] === maxWin && new Set(winCounts).size > 1;
+      return `<div class="sum-card${mark ? " lead" : ""}"><b>${co.zh}</b><br>${p.nameZh}<br><span>${winCounts[i]} 項相對突出${mark ? " · 呢次比較較多剜" : ""}</span></div>`;
+    })
+    .join("");
+
+  box.innerHTML = `<p class="hint">綠格＋剜＝呢一排喺已選產品之中相對突出（例如限額較高、病房較高、多重% 較高）。唔等於整體最好，因為未比保費、核保同索償定義。</p>
+    <div class="sum-row">${summary}</div>
+    <div class="compare"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
     <p class="hint" style="margin-top:10px">比較只反映本站已入庫欄位，唔等於保單全文。</p>`;
 }
 
@@ -146,7 +205,7 @@ function renderStats() {
   const nPr = state.db.products.length;
   $("stats").innerHTML = `
     <span class="pill">${nCo} 間公司</span>
-    <span class="pill">${nPr} 隻種子產品</span>
+    <span class="pill">${nPr} 隻產品</span>
     <span class="pill">更新 ${state.db.meta.updatedAt}</span>
     <span class="pill">不含儲蓄／銀行系列</span>`;
 }
@@ -170,8 +229,14 @@ async function boot() {
   state.db = { ...meta, products: [...medical, ...ci, ...life, ...accident] };
   $("disclaimer").textContent = state.db.meta.disclaimer;
   renderStats();
-  $("q").oninput = (e) => { state.q = e.target.value; renderCards(); };
-  $("company").onchange = (e) => { state.company = e.target.value; renderCards(); };
+  $("q").oninput = (e) => {
+    state.q = e.target.value;
+    renderCards();
+  };
+  $("company").onchange = (e) => {
+    state.company = e.target.value;
+    renderCards();
+  };
   const vo = $("verifiedOnly");
   if (vo) {
     vo.onclick = () => {
