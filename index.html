@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>保障羅盤 · 香港保障產品比較</title>
+  <meta name="description" content="比較香港主要代理行醫療、危疾、人壽、意外產品結構。資料只供參考。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/app.css" />
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>保障羅盤</h1>
+      <p>醫療／自願醫保、危疾、定期人壽、意外 — 結構比較，唔賣保險。</p>
+      <div class="meta-row" id="stats"></div>
+    </div>
+  </header>
+  <div class="wrap">
+    <section class="panel">
+      <div class="filters">
+        <div>
+          <label>保障類型</label>
+          <div class="cats" id="cats"></div>
+        </div>
+        <div>
+          <label for="company">保險公司</label>
+          <select id="company"></select>
+        </div>
+        <div style="grid-column: 1 / -1">
+          <label for="q">搜產品或公司</label>
+          <input id="q" type="search" placeholder="例如：緻尚保、VHIS、保柏" />
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:1.05rem">產品</h2>
+        <div class="hint" id="count"></div>
+      </div>
+      <p class="hint">標示「待核對」= 已入庫但未逐份計劃書核對。最多 3 隻加入下面比較表。</p>
+      <div class="grid" id="grid"></div>
+    </section>
+    <section class="panel">
+      <h2 style="margin:0 0 8px;font-size:1.05rem">並排比較</h2>
+      <div id="compare"></div>
+    </section>
+    <p class="disclaimer" id="disclaimer"></p>
+  </div>
+  <script src="./js/app.js"></script>
+</body>
+</html>
